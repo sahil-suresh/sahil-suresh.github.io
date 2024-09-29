@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>98.css example</title>
+    <title>Windows 95 Taskbar</title>
     <meta charset="UTF-8" />
 
-    <!-- Windows 98 Theme -->
+    <!-- Windows 95 Theme (98.css) -->
     <link rel="stylesheet" href="https://unpkg.com/98.css" />
 
-    <!-- Custom styling for the background and taskbar -->
+    <!-- Custom styling for taskbar and start menu -->
     <style>
       body {
         background-color: #D2B48C; /* Pastel brown color */
@@ -26,32 +26,65 @@
         background-color: #c0c0c0;
         display: flex;
         align-items: center;
+        justify-content: space-between;
         padding: 3px;
-        box-shadow: inset 1px 1px 2px #ffffff, inset -1px -1px 2px #404040;
         border-top: 2px solid #808080;
+        box-shadow: inset 1px 1px 0 #ffffff, inset -1px -1px 0 #404040;
       }
 
       /* Start button */
       .start-button {
-        background-color: #C0C0C0;
-        color: black;
+        background: linear-gradient(to right, #0f7d00, #1db200); /* Green gradient */
+        color: white;
         padding: 4px 20px;
         border: 2px solid #404040;
         box-shadow: inset 1px 1px 0 #ffffff, inset -1px -1px 0 #808080;
         font-family: Tahoma, sans-serif;
-        font-size: 12px;
+        font-size: 14px;
         display: flex;
         align-items: center;
         cursor: pointer;
       }
 
-      /* Windows logo placeholder */
       .start-logo {
         margin-right: 8px;
         width: 16px;
         height: 16px;
+        background: url('https://upload.wikimedia.org/wikipedia/commons/5/57/Windows_logo_–_1992-2001.svg') no-repeat;
+        background-size: cover;
+      }
+
+      /* Taskbar icons */
+      .taskbar-icons {
+        display: flex;
+        align-items: center;
+      }
+
+      .taskbar-icon {
+        width: 24px;
+        height: 24px;
         background-color: white;
-        border: 1px solid black;
+        margin: 0 4px;
+        border: 1px solid #808080;
+        box-shadow: inset 1px 1px 0 #ffffff, inset -1px -1px 0 #404040;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .taskbar-icon img {
+        width: 16px;
+        height: 16px;
+      }
+
+      /* Taskbar clock */
+      .taskbar-clock {
+        padding: 0 8px;
+        font-family: Tahoma, sans-serif;
+        font-size: 14px;
+        background-color: white;
+        border: 1px solid #808080;
+        box-shadow: inset 1px 1px 0 #ffffff, inset -1px -1px 0 #404040;
       }
 
       /* Start menu */
@@ -81,6 +114,40 @@
   </head>
 
   <body>
+    <!-- Taskbar -->
+    <div class="taskbar">
+      <!-- Start Button -->
+      <div class="start-button" id="start-button">
+        <div class="start-logo"></div> Start
+      </div>
+
+      <!-- Taskbar Icons -->
+      <div class="taskbar-icons">
+        <div class="taskbar-icon">
+          <img src="https://via.placeholder.com/16" alt="Icon 1">
+        </div>
+        <div class="taskbar-icon">
+          <img src="https://via.placeholder.com/16" alt="Icon 2">
+        </div>
+        <div class="taskbar-icon">
+          <img src="https://via.placeholder.com/16" alt="Icon 3">
+        </div>
+      </div>
+
+      <!-- Clock -->
+      <div class="taskbar-clock" id="taskbar-clock">
+        <!-- JavaScript will update the time here -->
+      </div>
+    </div>
+
+    <!-- Start Menu -->
+    <div class="start-menu" id="start-menu">
+      <div class="start-menu-item">Programs</div>
+      <div class="start-menu-item">Documents</div>
+      <div class="start-menu-item">Settings</div>
+      <div class="start-menu-item">Shut Down</div>
+    </div>
+
     <!-- Draggable Window -->
     <div class="window" id="draggable-window" style="position: absolute; top: 50px; left: 50px;">
       <div class="title-bar" id="title-bar">
@@ -98,24 +165,19 @@
       </div>
     </div>
 
-    <!-- Taskbar -->
-    <div class="taskbar">
-      <div class="start-button" id="start-button">
-        <div class="start-logo"></div> Start
-      </div>
-    </div>
-
-    <!-- Start Menu -->
-    <div class="start-menu" id="start-menu">
-      <div class="start-menu-item">Programs</div>
-      <div class="start-menu-item">Documents</div>
-      <div class="start-menu-item">Settings</div>
-      <div class="start-menu-item">Shut Down</div>
-    </div>
-
-    <!-- JavaScript for Dragging Functionality and Start Menu -->
+    <!-- JavaScript for Clock, Dragging, and Start Menu -->
     <script>
-      // Draggable window logic
+      // Update the taskbar clock every second
+      function updateClock() {
+        const now = new Date();
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        document.getElementById('taskbar-clock').textContent = `${hours}:${minutes}`;
+      }
+      setInterval(updateClock, 1000); // Update clock every second
+      updateClock(); // Initialize clock
+
+      // Draggable window logic with boundary checks
       let isDragging = false;
       let offsetX = 0, offsetY = 0;
 
@@ -133,8 +195,29 @@
       function onMouseMove(e) {
         if (isDragging) {
           e.preventDefault();
-          dragElement.style.left = `${e.clientX - offsetX}px`;
-          dragElement.style.top = `${e.clientY - offsetY}px`;
+
+          // Calculate new position
+          let newLeft = e.clientX - offsetX;
+          let newTop = e.clientY - offsetY;
+
+          // Boundary checks (to prevent dragging offscreen)
+          const windowWidth = window.innerWidth;
+          const windowHeight = window.innerHeight;
+          const elemWidth = dragElement.offsetWidth;
+          const elemHeight = dragElement.offsetHeight;
+
+          // Prevent going off the left side
+          if (newLeft < 0) newLeft = 0;
+          // Prevent going off the right side
+          if (newLeft + elemWidth > windowWidth) newLeft = windowWidth - elemWidth;
+          // Prevent going off the top side
+          if (newTop < 0) newTop = 0;
+          // Prevent going off the bottom side
+          if (newTop + elemHeight > windowHeight) newTop = windowHeight - elemHeight;
+
+          // Apply the new position
+          dragElement.style.left = `${newLeft}px`;
+          dragElement.style.top = `${newTop}px`;
         }
       }
 
