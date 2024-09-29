@@ -1,16 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>XP.css example</title>
+    <title>Optimized XP.css Draggable Window</title>
     <meta charset="UTF-8" />
 
     <!-- Windows XP Theme (include only one theme at a time) -->
     <link rel="stylesheet" href="https://unpkg.com/xp.css" />
 
-    <!-- Custom styling for the background -->
+    <!-- Custom styling for the background and window -->
     <style>
       body {
         background-color: #D2B48C; /* Pastel brown color */
+        height: 100vh;
+        margin: 0;
+        overflow: hidden; /* Prevent scrollbars when window is dragged to edges */
       }
 
       /* Ensure the window doesn't go out of bounds */
@@ -18,21 +21,35 @@
         position: absolute;
         top: 50px; /* Initial position */
         left: 50px;
-        width: 250px;
+        width: 300px;
         cursor: default;
+        z-index: 1; /* Initial z-index */
+        user-select: none; /* Prevent text selection during dragging */
       }
 
       /* Change cursor to "move" when hovering over the title bar */
       .title-bar {
         cursor: move;
       }
+
+      /* Optional: Style adjustments for better visibility */
+      .window-body {
+        padding: 10px;
+      }
     </style>
   </head>
 
   <body>
-    <div class="window" id="draggable-window">
+    <div
+      class="window"
+      id="draggable-window"
+      tabindex="0" <!-- Make window focusable for keyboard support -->
+      role="dialog"
+      aria-labelledby="window-title"
+      aria-describedby="window-content"
+    >
       <div class="title-bar" id="title-bar">
-        <div class="title-bar-text">
+        <div class="title-bar-text" id="window-title">
           Page Under Maintenance
         </div>
         <div class="title-bar-controls">
@@ -41,44 +58,151 @@
           <button aria-label="Close"></button>
         </div>
       </div>
-      <div class="window-body">
+      <div class="window-body" id="window-content">
         <p>Come check it out soon!!</p>
       </div>
     </div>
 
-    <!-- JavaScript for Dragging Functionality -->
+    <!-- JavaScript for Enhanced Dragging Functionality -->
     <script>
-      // Dragging logic
-      let isDragging = false;
-      let offsetX = 0, offsetY = 0;
+      (function () {
+        // State variables
+        let isDragging = false;
+        let offsetX = 0,
+          offsetY = 0;
+        let animationFrameId = null;
 
-      const dragElement = document.getElementById("draggable-window");
-      const dragHandle = document.getElementById("title-bar");
+        const dragElement = document.getElementById("draggable-window");
+        const dragHandle = document.getElementById("title-bar");
 
-      dragHandle.onmousedown = function(e) {
-        isDragging = true;
-        // Get the current mouse position
-        offsetX = e.clientX - dragElement.getBoundingClientRect().left;
-        offsetY = e.clientY - dragElement.getBoundingClientRect().top;
-        document.onmousemove = onMouseMove;
-        document.onmouseup = stopDragging;
-      };
-
-      function onMouseMove(e) {
-        if (isDragging) {
-          // Prevent text selection while dragging
-          e.preventDefault();
-          // Calculate the new position for the window
-          dragElement.style.left = `${e.clientX - offsetX}px`;
-          dragElement.style.top = `${e.clientY - offsetY}px`;
+        // Bring window to front on mousedown or touchstart
+        function bringToFront() {
+          dragElement.style.zIndex = Date.now(); // Simple way to ensure it's on top
         }
-      }
 
-      function stopDragging() {
-        isDragging = false;
-        document.onmousemove = null;
-        document.onmouseup = null;
-      }
+        // Start dragging
+        function startDrag(e) {
+          e.preventDefault();
+          bringToFront();
+          isDragging = true;
+
+          const rect = dragElement.getBoundingClientRect();
+
+          if (e.type === "mousedown") {
+            offsetX = e.clientX - rect.left;
+            offsetY = e.clientY - rect.top;
+            document.addEventListener("mousemove", onMouseMove);
+            document.addEventListener("mouseup", stopDrag);
+          } else if (e.type === "touchstart") {
+            const touch = e.touches[0];
+            offsetX = touch.clientX - rect.left;
+            offsetY = touch.clientY - rect.top;
+            document.addEventListener("touchmove", onTouchMove, { passive: false });
+            document.addEventListener("touchend", stopDrag);
+          }
+        }
+
+        // Dragging with mouse
+        function onMouseMove(e) {
+          if (!isDragging) return;
+          e.preventDefault();
+          updatePosition(e.clientX, e.clientY);
+        }
+
+        // Dragging with touch
+        function onTouchMove(e) {
+          if (!isDragging) return;
+          e.preventDefault();
+          const touch = e.touches[0];
+          updatePosition(touch.clientX, touch.clientY);
+        }
+
+        // Update window position with boundary constraints using requestAnimationFrame
+        function updatePosition(clientX, clientY) {
+          if (animationFrameId) return; // Throttle updates to one per frame
+
+          animationFrameId = requestAnimationFrame(() => {
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+
+            const windowRect = dragElement.getBoundingClientRect();
+            const windowWidth = windowRect.width;
+            const windowHeight = windowRect.height;
+
+            let newLeft = clientX - offsetX;
+            let newTop = clientY - offsetY;
+
+            // Constrain within viewport
+            newLeft = Math.max(0, Math.min(newLeft, viewportWidth - windowWidth));
+            newTop = Math.max(0, Math.min(newTop, viewportHeight - windowHeight));
+
+            dragElement.style.left = `${newLeft}px`;
+            dragElement.style.top = `${newTop}px`;
+
+            animationFrameId = null;
+          });
+        }
+
+        // Stop dragging
+        function stopDrag() {
+          isDragging = false;
+          document.removeEventListener("mousemove", onMouseMove);
+          document.removeEventListener("mouseup", stopDrag);
+          document.removeEventListener("touchmove", onTouchMove);
+          document.removeEventListener("touchend", stopDrag);
+        }
+
+        // Keyboard support for moving the window
+        function onKeyDown(e) {
+          const step = 10; // Number of pixels to move per key press
+          let moved = false;
+          let currentLeft = parseInt(dragElement.style.left, 10);
+          let currentTop = parseInt(dragElement.style.top, 10);
+
+          switch (e.key) {
+            case "ArrowUp":
+              currentTop = Math.max(0, currentTop - step);
+              moved = true;
+              break;
+            case "ArrowDown":
+              currentTop = Math.min(
+                window.innerHeight - dragElement.offsetHeight,
+                currentTop + step
+              );
+              moved = true;
+              break;
+            case "ArrowLeft":
+              currentLeft = Math.max(0, currentLeft - step);
+              moved = true;
+              break;
+            case "ArrowRight":
+              currentLeft = Math.min(
+                window.innerWidth - dragElement.offsetWidth,
+                currentLeft + step
+              );
+              moved = true;
+              break;
+            default:
+              break;Page Under Maintenance
+          }
+
+          if (moved) {
+            e.preventDefault();
+            dragElement.style.left = `${currentLeft}px`;
+            dragElement.style.top = `${currentTop}px`;
+          }
+        }
+
+        // Event listeners
+        dragHandle.addEventListener("mousedown", startDrag);
+        dragHandle.addEventListener("touchstart", startDrag, { passive: false });
+
+        dragElement.addEventListener("mousedown", bringToFront);
+        dragElement.addEventListener("touchstart", bringToFront, { passive: false });
+
+        // Keyboard event listener
+        dragElement.addEventListener("keydown", onKeyDown);
+      })();
     </script>
   </body>
 </html>
