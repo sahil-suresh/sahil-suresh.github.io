@@ -16,13 +16,21 @@
       /* Ensure the window doesn't go out of bounds */
       .window {
         position: absolute;
+        top: 50px; /* Initial position */
+        left: 50px;
+        width: 250px;
+        cursor: default;
+      }
+
+      /* Change cursor to "move" when hovering over the title bar */
+      .title-bar {
         cursor: move;
       }
     </style>
   </head>
 
   <body>
-    <div class="window" id="draggable-window" style="margin: 32px; width: 250px">
+    <div class="window" id="draggable-window">
       <div class="title-bar" id="title-bar">
         <div class="title-bar-text">
           Page Under Maintenance
@@ -41,48 +49,35 @@
     <!-- JavaScript for Dragging Functionality -->
     <script>
       // Dragging logic
-      dragElement(document.getElementById("draggable-window"));
+      let isDragging = false;
+      let offsetX = 0, offsetY = 0;
 
-      function dragElement(el) {
-        var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-        // Get the title bar for dragging
-        if (document.getElementById("title-bar")) {
-          // If present, the title bar is where you move the window
-          document.getElementById("title-bar").onmousedown = dragMouseDown;
-        } else {
-          // Otherwise, move the element itself
-          el.onmousedown = dragMouseDown;
-        }
+      const dragElement = document.getElementById("draggable-window");
+      const dragHandle = document.getElementById("title-bar");
 
-        function dragMouseDown(e) {
-          e = e || window.event;
+      dragHandle.onmousedown = function(e) {
+        isDragging = true;
+        // Get the current mouse position
+        offsetX = e.clientX - dragElement.getBoundingClientRect().left;
+        offsetY = e.clientY - dragElement.getBoundingClientRect().top;
+        document.onmousemove = onMouseMove;
+        document.onmouseup = stopDragging;
+      };
+
+      function onMouseMove(e) {
+        if (isDragging) {
+          // Prevent text selection while dragging
           e.preventDefault();
-          // Get the mouse cursor position at startup
-          pos3 = e.clientX;
-          pos4 = e.clientY;
-          document.onmouseup = closeDragElement;
-          // Call a function whenever the cursor moves
-          document.onmousemove = elementDrag;
+          // Calculate the new position for the window
+          dragElement.style.left = `${e.clientX - offsetX}px`;
+          dragElement.style.top = `${e.clientY - offsetY}px`;
         }
+      }
 
-        function elementDrag(e) {
-          e = e || window.event;
-          e.preventDefault();
-          // Calculate the new cursor position
-          pos1 = pos3 - e.clientX;
-          pos2 = pos4 - e.clientY;
-          pos3 = e.clientX;
-          pos4 = e.clientY;
-          // Set the element's new position
-          el.style.top = (el.offsetTop - pos2) + "px";
-          el.style.left = (el.offsetLeft - pos1) + "px";
-        }
-
-        function closeDragElement() {
-          // Stop moving when mouse button is released
-          document.onmouseup = null;
-          document.onmousemove = null;
-        }
+      function stopDragging() {
+        isDragging = false;
+        document.onmousemove = null;
+        document.onmouseup = null;
       }
     </script>
   </body>
