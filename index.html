@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>XP.css example</title>
+    <title>98.css example</title>
     <meta charset="UTF-8" />
 
-    <!-- Windows XP Theme (include only one theme at a time) -->
-    <link rel="stylesheet" href="https://unpkg.com/xp.css" />
+    <!-- Windows 98 Theme -->
+    <link rel="stylesheet" href="https://unpkg.com/98.css" />
 
     <!-- Custom styling for the background and taskbar -->
     <style>
@@ -26,22 +26,32 @@
         background-color: #c0c0c0;
         display: flex;
         align-items: center;
-        padding: 5px;
-        box-shadow: 0px -1px 5px rgba(0, 0, 0, 0.2);
+        padding: 3px;
+        box-shadow: inset 1px 1px 2px #ffffff, inset -1px -1px 2px #404040;
+        border-top: 2px solid #808080;
       }
 
       /* Start button */
       .start-button {
-        background-color: #008000;
-        color: white;
-        padding: 5px 10px;
-        border: 1px solid #000;
-        border-radius: 5px;
-        font-family: Arial, sans-serif;
-        font-size: 14px;
+        background-color: #C0C0C0;
+        color: black;
+        padding: 4px 20px;
+        border: 2px solid #404040;
+        box-shadow: inset 1px 1px 0 #ffffff, inset -1px -1px 0 #808080;
+        font-family: Tahoma, sans-serif;
+        font-size: 12px;
         display: flex;
         align-items: center;
         cursor: pointer;
+      }
+
+      /* Windows logo placeholder */
+      .start-logo {
+        margin-right: 8px;
+        width: 16px;
+        height: 16px;
+        background-color: white;
+        border: 1px solid black;
       }
 
       /* Start menu */
@@ -51,28 +61,21 @@
         left: 5px;
         width: 200px;
         background-color: #c0c0c0;
-        border: 1px solid black;
+        border: 2px solid black;
         padding: 10px;
         display: none; /* Hidden by default */
+        box-shadow: inset 1px 1px 0 #ffffff, inset -1px -1px 0 #404040;
       }
 
       .start-menu-item {
         padding: 5px 0;
         cursor: pointer;
-        font-family: Arial, sans-serif;
+        font-family: Tahoma, sans-serif;
       }
 
       .start-menu-item:hover {
-        background-color: #b0b0b0;
-      }
-
-      /* Fake Windows XP logo for the Start button */
-      .start-logo {
-        margin-right: 8px;
-        width: 16px;
-        height: 16px;
-        background-color: white;
-        border: 1px solid #000;
+        background-color: #808080;
+        color: white;
       }
     </style>
   </head>
